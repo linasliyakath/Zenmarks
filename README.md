@@ -13,11 +13,11 @@ A production-ready bookmark manager built with Next.js 16, Supabase, and Tailwin
 
 ## 🛠️ Troubleshooting & Dev Log (Challenges & Solutions)
 
-During development and deployment, several advanced technical hurdles were encountered. Here is how we solved them:
+During development and deployment, several advanced technical hurdles were encountered. Here is how I solved them:
 
 ### 1. Next.js 16 Middleware Deprecation (`proxy.ts`)
 - **Problem**: Next.js 16 threw warnings that `middleware.ts` is deprecated.
-- **Solution**: We shifted to the new **`proxy.ts`** architecture. We renamed the file and updated the export to `export default async function proxy(request: NextRequest)` to comply with the latest framework standards.
+- **Solution**: I shifted to the new **`proxy.ts`** architecture. I renamed the file and updated the export to `export default async function proxy(request: NextRequest)` to comply with the latest framework standards.
 
 ### 2. OAuth "Unsupported Provider" & Redirect Mismatches
 - **Problem**: Google login failed initially with 400 errors or "Redirect URI Mismatch".
@@ -29,9 +29,9 @@ During development and deployment, several advanced technical hurdles were encou
 ### 3. Production Real-Time Sync Lag (The "Refresh" Issue)
 - **Problem**: Bookmarks worked on localhost but required a manual refresh in production (Vercel).
 - **Solution**: 
-  - **Singleton Pattern**: We updated `lib/supabaseClient.ts` to use a singleton pattern, preventing multiple 'zombie' websocket connections from being created in a production environment.
-  - **Session-First Subscription**: We refactored `BookmarkList.tsx` to ensure the application waits for the initial data fetch (which verifies the user session) before initiating the Real-Time channel. This prevents Supabase from seeing the connection as "Anonymous" and blocking the stream.
-  - **Replication Identity**: We modified the database to use `REPLICA IDENTITY FULL`, ensuring that every data change (Update/Delete) transmits the full object to the client.
+  - **Singleton Pattern**: I updated `lib/supabaseClient.ts` to use a singleton pattern, preventing multiple 'zombie' websocket connections from being created in a production environment.
+  - **Session-First Subscription**: I refactored `BookmarkList.tsx` to ensure the application waits for the initial data fetch (which verifies the user session) before initiating the Real-Time channel. This prevents Supabase from seeing the connection as "Anonymous" and blocking the stream.
+  - **Replication Identity**: I modified the database to use `REPLICA IDENTITY FULL`, ensuring that every data change (Update/Delete) transmits the full object to the client.
 
 ### 4. Database Schema Cache Errors
 - **Problem**: "Could not find table public.bookmarks".
