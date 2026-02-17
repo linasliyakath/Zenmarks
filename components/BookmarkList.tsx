@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabaseClient'
 import { Trash2, ExternalLink, Bookmark as BookmarkIcon, Loader2 } from 'lucide-react'
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 type Bookmark = {
     id: string
@@ -16,39 +17,7 @@ export default function BookmarkList() {
     const [isLoading, setIsLoading] = useState(true)
     const supabase = createClient()
 
-    useEffect(() => {
-        fetchBookmarks()
-
-        // Subscribe to realtime changes
-        const channel = supabase
-            .channel('bookmarks-changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'bookmarks',
-                },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        setBookmarks((prev) => [payload.new as Bookmark, ...prev])
-                    } else if (payload.eventType === 'DELETE') {
-                        setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id))
-                    } else if (payload.eventType === 'UPDATE') {
-                        setBookmarks((prev) =>
-                            prev.map((b) => (b.id === payload.new.id ? (payload.new as Bookmark) : b))
-                        )
-                    }
-                }
-            )
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
-        }
-    }, [])
-
-    const fetchBookmarks = async () => {
+    const fetchBookmarks = useCallback(async () => {
         const { data, error } = await supabase
             .from('bookmarks')
             .select('*')
@@ -60,7 +29,47 @@ export default function BookmarkList() {
             setBookmarks(data || [])
         }
         setIsLoading(false)
-    }
+    }, [supabase])
+
+    useEffect(() => {
+        let channel: ReturnType<typeof supabase.channel>
+
+        const initRealtime = async () => {
+            // First fetch ensures we are authenticated and have initial state
+            await fetchBookmarks()
+
+            channel = supabase
+                .channel('realtime-bookmarks')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'bookmarks',
+                    },
+                    (payload: RealtimePostgresChangesPayload<Bookmark>) => {
+                        if (payload.eventType === 'INSERT') {
+                            setBookmarks((prev) => [payload.new as Bookmark, ...prev])
+                        } else if (payload.eventType === 'DELETE') {
+                            setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id))
+                        } else if (payload.eventType === 'UPDATE') {
+                            setBookmarks((prev) =>
+                                prev.map((b) => (b.id === payload.new.id ? (payload.new as Bookmark) : b))
+                            )
+                        }
+                    }
+                )
+                .subscribe()
+        }
+
+        initRealtime()
+
+        return () => {
+            if (channel) {
+                supabase.removeChannel(channel)
+            }
+        }
+    }, [supabase, fetchBookmarks])
 
     const handleDelete = async (id: string) => {
         // Optimistic update
