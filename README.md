@@ -2,6 +2,8 @@
 
 A production-ready bookmark manager built with Next.js 16, Supabase, and Tailwind CSS.
 
+**Live Demo:** [https://zenmarks-ecru.vercel.app/](https://zenmarks-ecru.vercel.app/)
+
 ## 🚀 Key Features
 - **One-Tap Google Auth**: Secure login via Google OAuth only.
 - **Private Vault**: Row Level Security (RLS) ensures users only see their own bookmarks.
@@ -23,7 +25,7 @@ During development and deployment, several advanced technical hurdles were encou
 - **Problem**: Google login failed initially with 400 errors or "Redirect URI Mismatch".
 - **Solution**: 
   - Verified that Google Provider was enabled in the Supabase Dashboard.
-  - Corrected the **Authorized Redirect URI** in the Google Cloud Console to point to the Supabase Auth URL (not the application URL).
+  - Corrected the **Authorized Redirect URI** in the Google Cloud Console to point to the Supabase Auth URL: `https://omyegkwwnchesvnbcyjw.supabase.co/auth/v1/callback`.
   - Ensured the `auth/callback` route was correctly exchanging the code for a session.
 
 ### 3. Production Real-Time Sync Lag (The "Refresh" Issue)
@@ -45,12 +47,12 @@ During development and deployment, several advanced technical hurdles were encou
 - Create a project on [Supabase](https://supabase.com).
 - Run the code in `supabase_schema.sql` in your SQL Editor.
 - Enable **Google Auth** in Providers.
-- Set **Site URL** to your deployment URL and add `https://your-project.supabase.co/auth/v1/callback` to Google Cloud Redirect URIs.
+- Set **Site URL** to `https://zenmarks-ecru.vercel.app/` and add `https://omyegkwwnchesvnbcyjw.supabase.co/auth/v1/callback` to Google Cloud Redirect URIs.
 
 ### 2. Environment Variables
 Create a `.env.local` file:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_URL=https://omyegkwwnchesvnbcyjw.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
