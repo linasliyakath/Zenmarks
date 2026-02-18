@@ -2,61 +2,119 @@
 
 A production-ready bookmark manager built with Next.js 16, Supabase, and Tailwind CSS.
 
-**Live Demo:** [https://zenmarks-ecru.vercel.app/](https://zenmarks-ecru.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://zenmarks-ecru.vercel.app/)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Google OAuth](https://img.shields.io/badge/Auth-Google_OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Production Ready](https://img.shields.io/badge/Status-Production_Ready-00C853?style=for-the-badge)
+
+---
+
+## Live Demo
+
+https://zenmarks-ecru.vercel.app/
+
+---
 
 ## 🚀 Key Features
-- **One-Tap Google Auth**: Secure login via Google OAuth only.
-- **Private Vault**: Row Level Security (RLS) ensures users only see their own bookmarks.
-- **Real-Time Sync**: Instant updates across all open tabs without refreshing.
-- **Next.js 16 'Proxy' Architecture**: Correctly implemented for the latest Next.js conventions.
-- **Optimistic UI**: Snappy deletion for a premium user experience.
+
+- **One-Tap Google Auth** – Secure login via Google OAuth only
+- **Private Vault** – Row Level Security (RLS) ensures users only see their own bookmarks
+- **Real-Time Sync** – Instant updates across all open tabs without refreshing
+- **Next.js 16 Proxy Architecture** – Implemented using `proxy.ts`
+- **Optimistic UI** – Snappy deletion for a premium user experience
 
 ---
 
-## 🛠️ Troubleshooting & Dev Log (Challenges & Solutions)
+## 🛠 Troubleshooting & Dev Log (Challenges & Solutions)
 
-During development and deployment, several advanced technical hurdles were encountered. Here is how I solved them:
+During development and deployment, several advanced technical hurdles were encountered and resolved.
 
 ### 1. Next.js 16 Middleware Deprecation (`proxy.ts`)
-- **Problem**: Next.js 16 threw warnings that `middleware.ts` is deprecated.
-- **Solution**: I shifted to the new **`proxy.ts`** architecture. I renamed the file and updated the export to `export default async function proxy(request: NextRequest)` to comply with the latest framework standards.
 
-### 2. OAuth "Unsupported Provider" & Redirect Mismatches
-- **Problem**: Google login failed initially with 400 errors or "Redirect URI Mismatch".
-- **Solution**: 
-  - Verified that Google Provider was enabled in the Supabase Dashboard.
-  - Corrected the **Authorized Redirect URI** in the Google Cloud Console to point to the Supabase Auth URL: `https://omyegkwwnchesvnbcyjw.supabase.co/auth/v1/callback`.
-  - Ensured the `auth/callback` route was correctly exchanging the code for a session.
+**Problem:**  
+Next.js 16 deprecated `middleware.ts`.
 
-### 3. Production Real-Time Sync Lag (The "Refresh" Issue)
-- **Problem**: Bookmarks worked on localhost but required a manual refresh in production (Vercel).
-- **Solution**: 
-  - **Singleton Pattern**: I updated `lib/supabaseClient.ts` to use a singleton pattern, preventing multiple 'zombie' websocket connections from being created in a production environment.
-  - **Session-First Subscription**: I refactored `BookmarkList.tsx` to ensure the application waits for the initial data fetch (which verifies the user session) before initiating the Real-Time channel. This prevents Supabase from seeing the connection as "Anonymous" and blocking the stream.
-  - **Replication Identity**: I modified the database to use `REPLICA IDENTITY FULL`, ensuring that every data change (Update/Delete) transmits the full object to the client.
+**Solution:**  
+Migrated to the new `proxy.ts` architecture:
 
-### 4. Database Schema Cache Errors
-- **Problem**: "Could not find table public.bookmarks".
-- **Solution**: Created a comprehensive `supabase_schema.sql` to initialize the table and RLS policies correctly in a single run.
+```ts
+export default async function proxy(request: NextRequest)
+```
 
 ---
 
-## 🛠️ Getting Started
+### 2. OAuth "Unsupported Provider" & Redirect Mismatches
+
+**Problem:**  
+Google login initially failed with 400 errors and redirect URI mismatches.
+
+**Solution:**
+- Enabled Google provider in Supabase dashboard
+- Correctly configured Authorized Redirect URI in Google Cloud Console
+- Ensured `auth/callback` properly exchanged the code for a session
+
+---
+
+### 3. Production Real-Time Sync Lag (The “Refresh” Issue)
+
+**Problem:**  
+Real-time worked locally but required refresh in production.
+
+**Solution:**
+- Implemented a Supabase client **singleton pattern**
+- Refactored to ensure **session-first subscription**
+- Set database to `REPLICA IDENTITY FULL` for complete change payloads
+
+---
+
+### 4. Database Schema Cache Errors
+
+**Problem:**  
+`Could not find table public.bookmarks`
+
+**Solution:**  
+Created a complete `supabase_schema.sql` file to initialize:
+- Table structure
+- RLS policies
+- Required database configuration
+
+---
+
+## 🛠 Getting Started
 
 ### 1. Supabase Setup
-- Create a project on [Supabase](https://supabase.com).
-- Run the code in `supabase_schema.sql` in your SQL Editor.
-- Enable **Google Auth** in Providers.
-- Set **Site URL** to `https://zenmarks-ecru.vercel.app/` and add `https://omyegkwwnchesvnbcyjw.supabase.co/auth/v1/callback` to Google Cloud Redirect URIs.
+
+- Create a project on Supabase
+- Run `supabase_schema.sql` in the SQL Editor
+- Enable **Google Auth** under Providers
+- Set Site URL to:
+
+```
+https://zenmarks-ecru.vercel.app/
+```
+
+- Add redirect URI in Google Cloud Console:
+
+```
+https://omyegkwwnchesvnbcyjw.supabase.co/auth/v1/callback
+```
+
+---
 
 ### 2. Environment Variables
+
 Create a `.env.local` file:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://omyegkwwnchesvnbcyjw.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
+---
+
 ### 3. Install & Run
+
 ```bash
 npm install
 npm run dev
@@ -65,9 +123,36 @@ npm run dev
 ---
 
 ## 📂 Folder Structure
-- `app/`: Next.js 16 App Router & API routes.
-- `components/`: UI logic (Forms, List, Real-time).
-- `lib/`: Supabase browser client (Singleton).
-- `utils/`: Server-side & Middleware logic.
-- `proxy.ts`: Global route protection.
-- `supabase_schema.sql`: Database initialization script.
+
+```
+app/                # Next.js 16 App Router & API routes
+components/         # UI logic (Forms, List, Real-time)
+lib/                # Supabase browser client (Singleton)
+utils/              # Server-side & Middleware logic
+proxy.ts            # Global route protection
+supabase_schema.sql # Database initialization script
+```
+
+---
+
+## 📌 Architecture Overview
+
+```
+Client (Next.js 16 App Router)
+        ↓
+Supabase Auth (Google OAuth)
+        ↓
+PostgreSQL (RLS Enforced)
+        ↓
+Realtime WebSocket Channel
+```
+
+Security is enforced at the **database level**, not just the frontend.
+
+---
+
+## 👨‍💻 Author
+
+Linas Liyakath  
+Full-Stack Developer  
+Focused on authentication systems, scalable architecture, and real-time applications.
